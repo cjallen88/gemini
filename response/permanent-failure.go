@@ -1,6 +1,9 @@
 package response
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 const (
 	Generic             Status = 50
@@ -15,8 +18,8 @@ type PermanentFailureResponse struct {
 	Message string
 }
 
-func (r *PermanentFailureResponse) String() string {
-	return fmt.Sprintf("%d %s\r\n", r.Status, r.Message)
+func (r *PermanentFailureResponse) WriteToStream(w io.Writer) (int, error) {
+	return fmt.Fprintf(w, "%d %s\r\n", r.Status, r.Message)
 }
 
 func NewPermanentFailureResponse(status Status, message string) *PermanentFailureResponse {

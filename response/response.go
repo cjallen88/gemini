@@ -1,19 +1,9 @@
 package response
 
+import "io"
+
 type Status int
 
 type Response interface {
-	String() string
+	WriteToStream(w io.Writer) (int, error)
 }
-
-// func (r *SuccessResponse) Type() Type {
-// 	return Success
-// }
-
-// type Response interface {
-// 	String()
-// }
-
-// func (r *Response) String() string {
-// 	return fmt.Sprintf("20 %d\r\n%d", r.MimeType, r.Body)
-// }

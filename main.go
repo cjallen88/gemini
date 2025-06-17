@@ -44,7 +44,7 @@ func main() {
 
 func writeResponseAndClose(conn net.Conn, resp *response.Response) {
 	if resp != nil {
-		_, err := conn.Write([]byte((*resp).String()))
+		_, err := (*resp).WriteToStream(conn) //conn.Write([]byte((*resp).String()))
 		if err != nil {
 			log.Println("Failed to write response", err.Error())
 		}

@@ -8,22 +8,22 @@ import (
 type PermanentFailureStatus Status
 
 const (
-	PermenentFailure                    PermanentFailureStatus = 50
-	PermenentFailureNotFound            PermanentFailureStatus = 51
-	PermenentFailureGone                PermanentFailureStatus = 52
-	PermenentFailureProxyRequestRefused PermanentFailureStatus = 53
-	PermenentFailureBadRequest          PermanentFailureStatus = 59
+	PermanentFailure                    PermanentFailureStatus = 50
+	PermanentFailureNotFound            PermanentFailureStatus = 51
+	PermanentFailureGone                PermanentFailureStatus = 52
+	PermanentFailureProxyRequestRefused PermanentFailureStatus = 53
+	PermanentFailureBadRequest          PermanentFailureStatus = 59
 )
 
 func (r *PermanentFailureStatus) DefaultMessage() string {
 	switch *r {
-	case PermenentFailureNotFound:
+	case PermanentFailureNotFound:
 		return "This resource was not found"
-	case PermenentFailureGone:
+	case PermanentFailureGone:
 		return "This resource is no longer available"
-	case PermenentFailureProxyRequestRefused:
+	case PermanentFailureProxyRequestRefused:
 		return "The proxy server rejected the request"
-	case PermenentFailureBadRequest:
+	case PermanentFailureBadRequest:
 		return "The server was unable to understand the request"
 	}
 	return "The server has encountered an error"

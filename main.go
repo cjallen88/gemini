@@ -61,13 +61,14 @@ func handleRequest(conn net.Conn) {
 	buffer := make([]byte, 1024)
 	bytesRead, err := conn.Read(buffer)
 	if err != nil {
-		log.Print("Couldn't read", err.Error())
-		resp = response.NewPermanentFailureResponse(response.BadRequest, err.Error())
+		message := fmt.Sprintf("Couldn't read: %s", err)
+		resp = response.NewPermanentFailureResponse(response.PermenentFailureBadRequest, &message)
 		return
 	}
 	if bytesRead > 1024 {
-		log.Print("Request too long, ignoring")
-		resp = response.NewPermanentFailureResponse(response.BadRequest, "request too long")
+		message := "Request too long"
+		log.Print(&message)
+		resp = response.NewPermanentFailureResponse(response.PermenentFailureBadRequest, &message)
 		return
 	}
 
@@ -75,7 +76,8 @@ func handleRequest(conn net.Conn) {
 	request, err := request.ParseRequest(requestStr)
 
 	if err != nil {
-		resp = response.NewPermanentFailureResponse(response.BadRequest, fmt.Sprintf("Invalid request: %s\r\n", err.Error()))
+		message := fmt.Sprintf("Invalid request: %s\r\n", err)
+		resp = response.NewPermanentFailureResponse(response.PermenentFailureBadRequest, &message)
 	} else {
 		resp = response.NewSuccessResponse("text/gemini", fmt.Sprintf("hello, world on %s!\r\n", request.Url.String()))
 	}

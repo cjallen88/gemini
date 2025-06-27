@@ -3,8 +3,8 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
-	"gemini/request"
-	"gemini/response"
+	"gemini/server/request"
+	"gemini/server/response"
 	"log"
 	"net"
 )

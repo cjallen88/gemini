@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"gemini/request"
-	"gemini/response"
 	"gemini/server"
+	"gemini/server/request"
+	"gemini/server/response"
 	"path"
 	"path/filepath"
 	"runtime"

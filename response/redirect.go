@@ -18,8 +18,9 @@ type RedirectResponse struct {
 	URL    url.URL
 }
 
-func (r *RedirectResponse) WriteToStream(w io.Writer) (int, error) {
-	return fmt.Fprintf(w, "%d %s\r\n", r.Status, &r.URL)
+func (r *RedirectResponse) WriteTo(w io.Writer) (int64, error) {
+	n, error := fmt.Fprintf(w, "%d %s\r\n", r.Status, &r.URL)
+	return int64(n), error
 }
 
 func NewRedirectResponse(status RedirectStatus, url url.URL) (*RedirectResponse, error) {

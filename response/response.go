@@ -5,5 +5,5 @@ import "io"
 type Status int
 
 type Response interface {
-	WriteToStream(w io.Writer) (int, error)
+	WriteTo(w io.Writer) (int64, error)
 }

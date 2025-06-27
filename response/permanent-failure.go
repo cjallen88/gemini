@@ -34,12 +34,15 @@ type PermanentFailureResponse struct {
 	Message *string
 }
 
-func (r *PermanentFailureResponse) WriteToStream(w io.Writer) (int, error) {
-	msg := *r.Message
+func (r *PermanentFailureResponse) WriteTo(w io.Writer) (int64, error) {
+	var msg string
 	if r.Message == nil {
 		msg = r.Status.DefaultMessage()
+	} else {
+		msg = *r.Message
 	}
-	return fmt.Fprintf(w, "%d %s\r\n", r.Status, msg)
+	n, error := fmt.Fprintf(w, "%d %s\r\n", r.Status, msg)
+	return int64(n), error
 }
 
 func NewPermanentFailureResponse(status PermanentFailureStatus, message *string) *PermanentFailureResponse {

@@ -34,12 +34,15 @@ type TemporaryFailureResponse struct {
 	Message *string
 }
 
-func (r *TemporaryFailureResponse) WriteToStream(w io.Writer) (int, error) {
-	msg := *r.Message
+func (r *TemporaryFailureResponse) WriteTo(w io.Writer) (int64, error) {
+	var msg string
 	if r.Message == nil {
 		msg = r.Status.DefaultMessage()
+	} else {
+		msg = *r.Message
 	}
-	return fmt.Fprintf(w, "%d %s\r\n", r.Status, msg)
+	n, error := fmt.Fprintf(w, "%d %s\r\n", r.Status, msg)
+	return int64(n), error
 }
 
 func NewTemporaryFailureResponse(status TemporaryFailureStatus, message *string) *TemporaryFailureResponse {

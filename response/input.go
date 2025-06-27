@@ -17,8 +17,9 @@ type InputResponse struct {
 	Prompt string
 }
 
-func (r *InputResponse) WriteToStream(w io.Writer) (int, error) {
-	return fmt.Fprintf(w, "%d %s\r\n", r.Status, r.Prompt)
+func (r *InputResponse) WriteTo(w io.Writer) (int64, error) {
+	n, error := fmt.Fprintf(w, "%d %s\r\n", r.Status, r.Prompt)
+	return int64(n), error
 }
 
 func NewInputResponse(status InputStatus, prompt string) *InputResponse {

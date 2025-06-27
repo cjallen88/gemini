@@ -5,27 +5,34 @@ import (
 	"gemini/request"
 	"gemini/response"
 	"gemini/server"
-	"log"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 func main() {
-	config := &server.Config{
+	_, b, _, _ := runtime.Caller(0)
+	basepath := filepath.Dir(b)
+	staticFilesPath := path.Join(basepath, "/static")
+
+	server := server.NewServer(server.Config{
 		Host:            "localhost",
 		Port:            "1965",
 		CertificatePath: "localhost.crt",
 		KeyPath:         "localhost.key",
-	}
+		StaticFilesPath: staticFilesPath,
+	})
 
-	err := server.Serve(config, handleRequest)
-	if err != nil {
-		log.Fatalf("Server error: %v", err)
-	}
+	server.CustomHandler("/game", handleGame)
+	server.Serve()
 }
 
-func handleRequest(request request.Request, cert *server.Certificate) response.Response {
+func handleGame(request request.Request, cert *server.Certificate) response.Response {
 	if cert == nil {
 		message := "Client certificate is required for this request"
 		return response.NewClientCertificatesResponse(response.CertificateRequired, &message)
 	}
-	return response.NewSuccessResponse("text/gemini", fmt.Sprintf("hello to %s, world on %s!\r\n with fingerprint %s", cert.Name, request.Url.String(), cert.Fingerprint))
+	message := fmt.Sprintf("hello to %s, world on %s!", cert.Name, request.Url.String())
+	return response.NewSuccessResponse("text/gemini", strings.NewReader(message))
 }

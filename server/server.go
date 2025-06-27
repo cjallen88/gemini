@@ -1,16 +1,12 @@
 package server
 
 import (
-	"bytes"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"gemini/request"
 	"gemini/response"
 	"log"
 	"net"
-	"os"
-	"path"
 )
 
 type Config struct {
@@ -28,6 +24,7 @@ type Server struct {
 	Config   Config
 }
 
+// NewServer creates a new Gemini server instance with the provided configuration.
 func NewServer(config Config) *Server {
 	return &Server{
 		handlers: make(map[string]RequestHandler),
@@ -35,10 +32,13 @@ func NewServer(config Config) *Server {
 	}
 }
 
-func (s *Server) CustomHandler(requestPath string, handler RequestHandler) {
+// HandlePath registers a custom request handler for a specific path.
+// This takes precedence over serving static files, and can be used to implement dynamic content or custom logic.
+func (s *Server) HandlePath(requestPath string, handler RequestHandler) {
 	s.handlers[requestPath] = handler
 }
 
+// Serve starts the Gemini server, listening for incoming TLS connections.
 func (s *Server) Serve() {
 	cert, err := tls.LoadX509KeyPair(s.Config.CertificatePath, s.Config.KeyPath)
 	if err != nil {
@@ -65,10 +65,11 @@ func (s *Server) Serve() {
 			continue
 		}
 		go s.handleRequest(conn)
-		// TODO prevent more handlers being added while handling requests
 	}
 }
 
+// writeResponseAndClose function to write a response to the connection and close it
+// should be called in a defer statement to ensure it always runs
 func writeResponseAndClose(conn net.Conn, resp *response.Response) {
 	if resp != nil {
 		_, err := (*resp).WriteTo(conn)
@@ -79,72 +80,4 @@ func writeResponseAndClose(conn net.Conn, resp *response.Response) {
 		log.Println("No response to write")
 	}
 	conn.Close()
-}
-
-func (s *Server) handleRequest(conn net.Conn) {
-	var resp response.Response
-	defer writeResponseAndClose(conn, &resp)
-
-	buffer := make([]byte, 1024)
-	bytesRead, err := conn.Read(buffer)
-	if err != nil {
-		message := fmt.Sprintf("Couldn't read: %s", err)
-		resp = response.NewPermanentFailureResponse(response.PermanentFailureBadRequest, &message)
-		return
-	}
-	if bytesRead > 1024 {
-		message := "Request too long"
-		resp = response.NewPermanentFailureResponse(response.PermanentFailureBadRequest, &message)
-		return
-	}
-
-	requestStr := string(bytes.TrimSpace(buffer[:bytesRead]))
-	request, err := request.ParseRequest(requestStr)
-
-	if err != nil {
-		message := fmt.Sprintf("Invalid request: %s", err)
-		resp = response.NewPermanentFailureResponse(response.PermanentFailureBadRequest, &message)
-		return
-	}
-
-	customResponse := s.handleCustomRequest(conn, request)
-	if customResponse != nil {
-		resp = *customResponse
-	} else {
-		resp = s.handleFileRequest(conn, request)
-	}
-}
-
-func (s *Server) handleCustomRequest(conn net.Conn, request request.Request) *response.Response {
-	cert, err := ClientCert(conn)
-	if err != nil {
-		log.Printf("Error getting client certificate: %s\n", err)
-	}
-	// custom handlers
-	for path, handler := range s.handlers {
-		if path == request.Url.Path {
-			response := handler(request, cert)
-			return &response
-		}
-	}
-	return nil
-}
-
-func (s *Server) handleFileRequest(conn net.Conn, request request.Request) response.Response {
-	gemfileDirPath := path.Join(s.Config.StaticFilesPath, path.Clean(request.Url.Path))
-	hasExtension := path.Ext(gemfileDirPath) != ""
-	if !hasExtension {
-		gemfileDirPath = path.Join(gemfileDirPath, "/index.gmi")
-	}
-	if _, err := os.Stat(gemfileDirPath); errors.Is(err, os.ErrNotExist) {
-		return response.NewPermanentFailureResponse(response.PermanentFailureNotFound, nil)
-	}
-
-	file, err := os.Open(gemfileDirPath)
-	if err != nil {
-		log.Printf("Could not open file: %s", err)
-		message := "Resource could not be read"
-		return response.NewPermanentFailureResponse(response.PermanentFailure, &message)
-	}
-	return response.NewSuccessResponse("text/gemini", file)
 }
